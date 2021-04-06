@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="SimpleRatingBar">
+        <attr name="totalStarCount" format="integer" />
+        <attr name="starSize" format="dimension" />
+        <attr name="starPadding" format="dimension" />
+        <attr name="selectedStarCount" format="float" />
+        <attr name="isSelectable" format="boolean" />
+        <attr name="isStepHalf" format="boolean" />
+        <attr name="backgroundStar" format="reference" />
+        <attr name="selectedStar" format="reference" />
+        <attr name="halfStar" format="reference" />
+
+    </declare-styleable>
+</resources>

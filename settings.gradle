@@ -1,0 +1,4 @@
+include ':exo'
+include ':views'
+include ':app'
+rootProject.name = "MagicAndroid"
