@@ -13,8 +13,12 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.MagicAndroid">
-        <activity android:name=".MagicExoActivity"></activity>
-        <activity android:name=".CustomUiActivity" />
+        <activity
+            android:name=".MagicExoActivity"
+            android:configChanges="orientation|screenSize|keyboardHidden" />
+        <activity
+            android:name=".CustomUiActivity"
+            android:configChanges="orientation|screenSize|keyboardHidden" />
         <activity android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

@@ -1,10 +1,11 @@
 package com.v.exo
 
 import android.os.Bundle
+import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import com.v.exo.lib.SimpleVideoPlayerLayout
 
-class MagicExoActivity : AppCompatActivity() {
+class MagicExoActivity : AppCompatActivity(), SimpleVideoPlayerLayout.OnSimpleVideoListener {
     private val tag = "MagicExoActivity"
     private val testUrl =
         "http://opfront-1300174126.cos.ap-beijing.myqcloud.com/fvideo1616999434687_26954_0.mp4"
@@ -24,6 +25,9 @@ class MagicExoActivity : AppCompatActivity() {
         setContentView(R.layout.activity_magic_exo)
 
         playerLayout = findViewById(R.id.exo_player_layout)
+        playerLayout.setOnSimpleVideoListener(this)
+        playerLayout.hasNext = true
+        playerLayout.hasPre = true
         currentUrl = testUrl
     }
 
@@ -48,6 +52,31 @@ class MagicExoActivity : AppCompatActivity() {
     override fun onStop() {
         super.onStop()
         playerLayout.onStop()
+    }
+
+    override fun onBackPressed() {
+        if (playerLayout.onBack()) {
+            return
+        }
+        super.onBackPressed()
+    }
+
+
+    override fun onBack() {
+        onBackPressed()
+    }
+
+    override fun onPre() {
+        playerLayout.replay()
+    }
+
+    override fun onNext() {
+        currentUrl = if (currentUrl == testUrl) {
+            testUrl0
+        } else {
+            testUrl
+        }
+        playerLayout.changeUrl(currentUrl, 0L)
     }
 
 
