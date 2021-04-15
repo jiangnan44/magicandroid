@@ -1,9 +1,11 @@
 package com.v.exo
 
 import android.os.Bundle
+import android.os.Environment
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import com.v.exo.lib.SimpleVideoPlayerLayout
+import java.io.File
 
 class MagicExoActivity : AppCompatActivity(), SimpleVideoPlayerLayout.OnSimpleVideoListener {
     private val tag = "MagicExoActivity"
@@ -12,6 +14,8 @@ class MagicExoActivity : AppCompatActivity(), SimpleVideoPlayerLayout.OnSimpleVi
 
     private val testUrl0 =
         "http://opfront-1300174126.cos.ap-beijing.myqcloud.com/f1616988184912_26959_0.mp4"
+
+    private val testUrl1 = "Download/VID_20210414_095858.mp4"
 
     private lateinit var playerLayout: SimpleVideoPlayerLayout
 
@@ -28,23 +32,29 @@ class MagicExoActivity : AppCompatActivity(), SimpleVideoPlayerLayout.OnSimpleVi
         playerLayout.setOnSimpleVideoListener(this)
         playerLayout.hasNext = true
         playerLayout.hasPre = true
+        playerLayout.useGestureController()
         currentUrl = testUrl
     }
 
 
     override fun onStart() {
         super.onStart()
-        playerLayout.onStart(currentUrl, currentWindow, playbackPosition)
+        playerLayout.onStart(currentUrl, currentWindow, playbackPosition, playWhenReady)
     }
 
     override fun onResume() {
         super.onResume()
-        playerLayout.onResume(currentUrl, currentWindow, playbackPosition)
+        playerLayout.onResume(currentUrl, currentWindow, playbackPosition, playWhenReady)
     }
 
 
     override fun onPause() {
         super.onPause()
+        playerLayout.player?.let {
+            playWhenReady = it.playWhenReady
+            playbackPosition = it.currentPosition
+            currentWindow = it.currentWindowIndex
+        }
         playerLayout.onPause()
     }
 
@@ -72,7 +82,10 @@ class MagicExoActivity : AppCompatActivity(), SimpleVideoPlayerLayout.OnSimpleVi
 
     override fun onNext() {
         currentUrl = if (currentUrl == testUrl) {
-            testUrl0
+            Environment.getExternalStorageDirectory()
+                .absolutePath
+                .plus(File.separator)
+                .plus(testUrl1)
         } else {
             testUrl
         }

@@ -1,5 +1,6 @@
 package com.v.exo.lib
 
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
 import android.content.pm.ActivityInfo
@@ -9,6 +10,7 @@ import android.os.Build
 import android.util.AttributeSet
 import android.util.Log
 import android.view.LayoutInflater
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
@@ -44,10 +46,11 @@ class SimpleVideoPlayerLayout @JvmOverloads constructor(
 
     }
 
-    private var player: ExoPlayer? = null
+    var player: ExoPlayer? = null
     private lateinit var playerView: PlayerView
     private var playbackStateListener: PlaybackStateListener? = null
     private var simpleVideoListener: OnSimpleVideoListener? = null
+    private var gestureController: GestureController? = null
 
     private var speedDialog: AlertDialog? = null
     private var btnFullScreen: ImageButton? = null
@@ -73,9 +76,6 @@ class SimpleVideoPlayerLayout @JvmOverloads constructor(
     var screenState = SCREEN_SMALL_PORTRAIT
     var hasNext = false
     var hasPre = false
-    private var playWhenReady = true
-    private var playbackPosition = 0L
-    private var currentWindow = 0
 
     init {
         LayoutInflater.from(context).inflate(R.layout.simple_video_player_layout, this)
@@ -121,7 +121,12 @@ class SimpleVideoPlayerLayout @JvmOverloads constructor(
         }
     }
 
-    private fun initDefaultPlayer(url: String, currentWindow: Int, playbackPosition: Long) {
+    private fun initDefaultPlayer(
+        url: String,
+        currentWindow: Int,
+        playbackPosition: Long,
+        playWhenReady: Boolean
+    ) {
         if (player != null) return
 
         player = SimpleExoPlayer.Builder(context).build()
@@ -129,13 +134,16 @@ class SimpleVideoPlayerLayout @JvmOverloads constructor(
         playbackStateListener = PlaybackStateListener()
 
 
+        //use cache will cause extra time loading/buffering,yet next time open will like a lighting
+        val mediaSource = ExoSimpleCache.createMediaSource(url, context)
         val mediaItem = MediaItem.fromUri(url)
         player!!.let {
             Log.d(TAG, "initPlayer...")
-            it.setMediaItem(mediaItem)
+//            it.setMediaSource(mediaSource, playbackPosition)
+            it.setMediaItem(mediaItem, playbackPosition)
             it.playWhenReady = playWhenReady
             it.addListener(playbackStateListener!!)
-            it.seekTo(currentWindow, playbackPosition)
+            it.seekToDefaultPosition(currentWindow)
             it.prepare()
         }
     }
@@ -146,7 +154,7 @@ class SimpleVideoPlayerLayout @JvmOverloads constructor(
      * @param player
      * before invoke this method
      */
-    fun setPlayer(@NonNull player: ExoPlayer) {
+    fun replacePlayer(@NonNull player: ExoPlayer) {
         this.player?.let {
             if (playbackStateListener != null) {
                 it.removeListener(playbackStateListener!!)
@@ -164,9 +172,19 @@ class SimpleVideoPlayerLayout @JvmOverloads constructor(
     fun setPlayWhenReady(playWhenReady: Boolean) {//default is true
         player?.let {
             it.playWhenReady = playWhenReady
-            this.playWhenReady = playWhenReady
         }
     }
+
+    /**
+     * whether use gesture to control volume and brightness
+     */
+    fun useGestureController() {
+        if (gestureController == null) {
+            gestureController = GestureController(context)
+            playerView.setOnTouchListener(gestureController)
+        }
+    }
+
 
     fun onBack(): Boolean {
         speedDialog?.let {
@@ -184,16 +202,16 @@ class SimpleVideoPlayerLayout @JvmOverloads constructor(
     }
 
 
-    fun onStart(url: String, currentWindow: Int, playbackPosition: Long) {
+    fun onStart(url: String, currentWindow: Int, playbackPosition: Long, playWhenReady: Boolean) {
         if (Build.VERSION.SDK_INT >= 24) {
-            initDefaultPlayer(url, currentWindow, playbackPosition)
+            initDefaultPlayer(url, currentWindow, playbackPosition, playWhenReady)
         }
     }
 
-    fun onResume(url: String, currentWindow: Int, playbackPosition: Long) {
+    fun onResume(url: String, currentWindow: Int, playbackPosition: Long, playWhenReady: Boolean) {
         hideSystemUi()
         if (Build.VERSION.SDK_INT < 24 || player == null) {
-            initDefaultPlayer(url, currentWindow, playbackPosition)
+            initDefaultPlayer(url, currentWindow, playbackPosition, playWhenReady)
         }
     }
 
@@ -220,12 +238,15 @@ class SimpleVideoPlayerLayout @JvmOverloads constructor(
         }
     }
 
+    fun onDestroy() {
+        playbackStateListener = null
+        gestureController = null
+        simpleVideoListener = null
+    }
+
 
     private fun releasePlayer() {
         player?.let {
-            playWhenReady = it.playWhenReady
-            playbackPosition = it.currentPosition
-            currentWindow = it.currentWindowIndex
             playbackStateListener?.run {
                 it.removeListener(this)
             }
@@ -351,15 +372,14 @@ class SimpleVideoPlayerLayout @JvmOverloads constructor(
     }
 
     fun replay() {
-        player?.seekTo(currentWindow, 0L)
+        player?.seekTo(0L)
         hideEndUi()
     }
 
     fun changeUrl(@NonNull url: String, lastPosition: Long) {
         player?.let {
             it.stop()
-            it.setMediaItem(MediaItem.fromUri(url))
-            it.seekTo(lastPosition)
+            it.setMediaItem(MediaItem.fromUri(url), lastPosition)
             it.playWhenReady = true
             it.prepare()
         }

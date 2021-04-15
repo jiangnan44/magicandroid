@@ -55,8 +55,8 @@
                 android:id="@+id/exo_battery_view"
                 android:layout_width="25dp"
                 android:layout_height="15dp"
-                android:layout_marginEnd="10dp"
                 android:layout_marginTop="10dp"
+                android:layout_marginEnd="10dp"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
 
@@ -205,5 +205,6 @@
         </LinearLayout>
 
     </FrameLayout>
+
 
 </merge>

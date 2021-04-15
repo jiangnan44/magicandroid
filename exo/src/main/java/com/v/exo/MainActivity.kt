@@ -50,4 +50,8 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     private fun go2Activity(clz: Class<*>) {
         startActivity(Intent(this, clz))
     }
+
+    override fun onDestroy() {
+        super.onDestroy()
+    }
 }

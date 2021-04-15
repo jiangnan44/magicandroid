@@ -20,6 +20,7 @@ class CustomUiActivity : AppCompatActivity() {
     private val tag = "exoPlayer"
     private val testUrl = "Download/53926.mp4"
 
+
     private lateinit var playerView: StyledPlayerView
     private lateinit var playerControlView: StyledPlayerControlView
     private var player: SimpleExoPlayer? = null
