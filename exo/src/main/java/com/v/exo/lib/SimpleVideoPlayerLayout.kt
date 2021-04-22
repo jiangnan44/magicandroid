@@ -143,7 +143,7 @@ class SimpleVideoPlayerLayout @JvmOverloads constructor(
             it.setMediaItem(mediaItem, playbackPosition)
             it.playWhenReady = playWhenReady
             it.addListener(playbackStateListener!!)
-            it.seekToDefaultPosition(currentWindow)
+//            it.seekToDefaultPosition(currentWindow) //will cause bad buffering
             it.prepare()
         }
     }
