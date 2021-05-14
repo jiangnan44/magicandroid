@@ -1,4 +1,4 @@
-package com.v.magicandroid;
+package com.v.exo.recordtime;
 
 /**
  * Author:v

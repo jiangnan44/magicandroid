@@ -1,6 +1,11 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 buildscript {
-    ext.kotlin_version = "1.4.31"
+    ext {
+        kotlin_version = "1.4.31"
+        local = 'hello from huild.gradle'
+    }
+
+
     repositories {
         google()
         jcenter()
@@ -12,6 +17,8 @@ buildscript {
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files
     }
+
+
 }
 
 allprojects {
@@ -24,3 +31,51 @@ allprojects {
 task clean(type: Delete) {
     delete rootProject.buildDir
 }
+
+task printProperties {
+    doLast {
+        println local
+        println propertiesFile
+        if (project.hasProperty('cmd')) {
+            println cmd
+        }
+    }
+}
+
+task jiagu {
+    doLast {
+        exec {
+            commandLine "test.bat"
+        }
+
+        File dir = new File("app/build/bakApk")
+        if (!dir.exists()) {
+            println "bakApk Dir Not exists!! Abort copying..."
+            return
+        }
+
+        def size = dir.listFiles().length
+        if (size < 1) {
+            println "bakApk Dir is Empty!! Abort copying..."
+            return
+        }
+        File releaseDir = dir.listFiles()[size - 1]
+        def srcPath = releaseDir.absolutePath
+        def dstPath = "D:\\apkTools\\apk\\base\\${releaseDir.name}"
+        File dst = new File(dstPath)
+        if (dst.exists()) {
+            println "dst Dir is Already existed!! Abort copying..."
+            return
+        }
+        dst.mkdirs()
+        println "start copy release bakApk Dir:$srcPath"
+        exec {
+            commandLine "xcopy", srcPath, dstPath
+        }
+        println "copied release bakApk Dir into:$dstPath"
+    }
+    dependsOn('app:assembleRelease')
+}
+
+
+

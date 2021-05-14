@@ -1,10 +1,9 @@
-package com.v.magicandroid;
+package com.v.exo.recordtime;
 
 import android.os.Build;
 
 import androidx.annotation.RequiresApi;
 
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
@@ -118,7 +117,7 @@ public class MergeUtil {
         Section s2 = new Section(3_000L, 10_000L);
         Section s3 = new Section(0L, 6_000L);
         Section s4 = new Section(11_000L, 15_000L);
-        Section s5 = new Section(13_000L, 16_000L);
+        Section s5 = new Section(3_000L, 10_000L);
 
 
         ret.add(s1);

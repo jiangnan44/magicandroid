@@ -1,3 +1,4 @@
+include ':junit'
 include ':commonlib'
 include ':exo'
 include ':views'
