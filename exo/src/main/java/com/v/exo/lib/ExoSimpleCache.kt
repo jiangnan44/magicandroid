@@ -4,14 +4,13 @@ import android.content.Context
 import androidx.annotation.NonNull
 import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.database.ExoDatabaseProvider
-import com.google.android.exoplayer2.source.ExtractorMediaSource
 import com.google.android.exoplayer2.source.ProgressiveMediaSource
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
 import com.google.android.exoplayer2.upstream.cache.CacheDataSink
 import com.google.android.exoplayer2.upstream.cache.CacheDataSource
 import com.google.android.exoplayer2.upstream.cache.NoOpCacheEvictor
 import com.google.android.exoplayer2.upstream.cache.SimpleCache
-import com.v.commonlib.FileUtil
+import com.v.commonlib.util.FileUtil
 
 
 /**

@@ -1,34 +1,32 @@
 package com.v.exo.lib
 
-import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
 import android.content.pm.ActivityInfo
-import android.graphics.Color
 import android.os.BatteryManager
 import android.os.Build
+import android.text.TextUtils
 import android.util.AttributeSet
 import android.util.Log
 import android.view.LayoutInflater
-import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
+import android.view.WindowManager
 import android.widget.FrameLayout
-import android.widget.ImageButton
+import android.widget.ImageView
 import android.widget.TextView
+import android.widget.Toast
 import androidx.annotation.NonNull
 import androidx.appcompat.app.AlertDialog
 import com.google.android.exoplayer2.*
 import com.google.android.exoplayer2.ui.PlayerView
 import com.v.exo.R
-import java.lang.IllegalArgumentException
 import java.text.SimpleDateFormat
 import java.util.*
 
 /**
  * Author:v
  * Time:2021/4/2
- * Email:348075425@qq.com
  *
  * !!life is too complecated,simplify it,simplify it!!
  */
@@ -47,24 +45,20 @@ class SimpleVideoPlayerLayout @JvmOverloads constructor(
     }
 
     var player: ExoPlayer? = null
-    private lateinit var playerView: PlayerView
+    lateinit var playerView: PlayerView
     private var playbackStateListener: PlaybackStateListener? = null
     private var simpleVideoListener: OnSimpleVideoListener? = null
     private var gestureController: GestureController? = null
 
     private var speedDialog: AlertDialog? = null
-    private var btnFullScreen: ImageButton? = null
+    private var btnFullScreen: ImageView? = null
     private var tvSpeed: TextView? = null
     private var batteryView: BatteryView? = null
     private var tvSystemTime: TextView? = null
 
-    /**
-     * because I have a large list of video info entity,
-     * so I control next and pre myself instead of a list of MediaItem
-     */
+    private var endLayout: FrameLayout? = null
     private var tvNext: TextView? = null
     private var tvPre: TextView? = null
-    private var tvReplay: TextView? = null
 
 
     private var mmParent: ViewGroup? = null
@@ -86,12 +80,14 @@ class SimpleVideoPlayerLayout @JvmOverloads constructor(
     private fun initViews() {
         this.playerView = findViewById(R.id.exo_player_view)
         tvSpeed = playerView.findViewById(R.id.exo_speed)
-        tvNext = playerView.findViewById(R.id.exo_tv_next)
-        tvPre = playerView.findViewById(R.id.exo_tv_pre)
-        tvReplay = playerView.findViewById(R.id.exo_tv_replay)
         btnFullScreen = playerView.findViewById(R.id.exo_fullscreen)
         batteryView = playerView.findViewById(R.id.exo_battery_view)
         tvSystemTime = playerView.findViewById(R.id.exo_tv_system_time)
+
+        endLayout = playerView.findViewById(R.id.exo_center_layout)
+        tvNext = endLayout!!.findViewById(R.id.exo_tv_next)
+        tvPre = endLayout!!.findViewById(R.id.exo_tv_pre)
+        val tvReplay = endLayout!!.findViewById<View>(R.id.exo_tv_replay)
 
 
         tvSpeed!!.setOnClickListener(this)
@@ -99,9 +95,10 @@ class SimpleVideoPlayerLayout @JvmOverloads constructor(
         tvPre!!.setOnClickListener(this)
         tvReplay!!.setOnClickListener(this)
         btnFullScreen!!.setOnClickListener(this)
-        findViewById<View>(R.id.exo_iv_back).setOnClickListener(this)
+        playerView.findViewById<View>(R.id.exo_iv_back).setOnClickListener(this)
+//        playerView.findViewById<View>(R.id.exo_player_back).setOnClickListener(this)
         playerView.setControllerVisibilityListener {
-            if (it == View.VISIBLE) {
+            if (it == VISIBLE) {
                 updateBatteryAndSystemTime()
             }
         }
@@ -121,59 +118,34 @@ class SimpleVideoPlayerLayout @JvmOverloads constructor(
         }
     }
 
-    private fun initDefaultPlayer(
-        url: String,
-        currentWindow: Int,
-        playbackPosition: Long,
-        playWhenReady: Boolean
-    ) {
+    private fun initDefaultPlayer(url: String, currentWindow: Int, playbackPosition: Long) {
         if (player != null) return
 
-        player = SimpleExoPlayer.Builder(context).build()
+        val loadControl = DefaultLoadControl.Builder()
+            .setBufferDurationsMs(
+                50_000,
+                50_000,
+                1500,
+                2500
+            )
+            .build()
+        player = SimpleExoPlayer.Builder(context)
+            .setLoadControl(loadControl)
+            .build()
         playerView.player = player
         playbackStateListener = PlaybackStateListener()
 
 
-        //use cache will cause extra time loading/buffering,yet next time open will like a lighting
-        val mediaSource = ExoSimpleCache.createMediaSource(url, context)
         val mediaItem = MediaItem.fromUri(url)
         player!!.let {
             Log.d(TAG, "initPlayer...")
-//            it.setMediaSource(mediaSource, playbackPosition)
             it.setMediaItem(mediaItem, playbackPosition)
-            it.playWhenReady = playWhenReady
+            it.playWhenReady = true
             it.addListener(playbackStateListener!!)
-//            it.seekToDefaultPosition(currentWindow) //will cause bad buffering
             it.prepare()
         }
     }
 
-
-    /**
-     * you have to set up the
-     * @param player
-     * before invoke this method
-     */
-    fun replacePlayer(@NonNull player: ExoPlayer) {
-        this.player?.let {
-            if (playbackStateListener != null) {
-                it.removeListener(playbackStateListener!!)
-            }
-        }
-
-        initViews()
-        this.player = player
-        playerView.player = player
-
-        playbackStateListener = PlaybackStateListener()
-        this.player!!.addListener(playbackStateListener!!)
-    }
-
-    fun setPlayWhenReady(playWhenReady: Boolean) {//default is true
-        player?.let {
-            it.playWhenReady = playWhenReady
-        }
-    }
 
     /**
      * whether use gesture to control volume and brightness
@@ -202,40 +174,58 @@ class SimpleVideoPlayerLayout @JvmOverloads constructor(
     }
 
 
-    fun onStart(url: String, currentWindow: Int, playbackPosition: Long, playWhenReady: Boolean) {
+    fun onStart(url: String, currentWindow: Int, playbackPosition: Long) {
         if (Build.VERSION.SDK_INT >= 24) {
-            initDefaultPlayer(url, currentWindow, playbackPosition, playWhenReady)
+            initDefaultPlayer(url, currentWindow, playbackPosition)
         }
     }
 
-    fun onResume(url: String, currentWindow: Int, playbackPosition: Long, playWhenReady: Boolean) {
+    fun onResume(url: String, currentWindow: Int, playbackPosition: Long) {
         hideSystemUi()
-        if (Build.VERSION.SDK_INT < 24 || player == null) {
-            initDefaultPlayer(url, currentWindow, playbackPosition, playWhenReady)
+        when {
+            Build.VERSION.SDK_INT < 24 -> {
+                initDefaultPlayer(url, currentWindow, playbackPosition)
+            }
+            player == null -> {
+                initDefaultPlayer(url, currentWindow, playbackPosition)
+            }
+            else -> {
+                resumePlayer(url, currentWindow, playbackPosition)
+            }
+        }
+        if (context is Activity) {
+            (context as Activity).window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        }
+    }
+
+    private fun resumePlayer(url: String, currentWindow: Int, playbackPosition: Long) {
+        if (player != null) {
+            player!!.play()
+        } else {
+            initDefaultPlayer(url, currentWindow, playbackPosition)
         }
     }
 
     @Suppress("DEPRECATION")
     private fun hideSystemUi() {
-        playerView.systemUiVisibility = View.SYSTEM_UI_FLAG_LOW_PROFILE or
-                View.SYSTEM_UI_FLAG_FULLSCREEN or
-                View.SYSTEM_UI_FLAG_LAYOUT_STABLE or
-                View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY or
-                View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or
-                View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+        playerView.systemUiVisibility = SYSTEM_UI_FLAG_LOW_PROFILE or
+                SYSTEM_UI_FLAG_FULLSCREEN or
+                SYSTEM_UI_FLAG_LAYOUT_STABLE or
+                SYSTEM_UI_FLAG_IMMERSIVE_STICKY or
+                SYSTEM_UI_FLAG_HIDE_NAVIGATION or
+                SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
     }
 
     fun onPause() {
-        if (Build.VERSION.SDK_INT < 24) {
-            releasePlayer()
+        pausePlayer()
+        if (context is Activity) {
+            (context as Activity).window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         }
     }
 
 
     fun onStop() {
-        if (Build.VERSION.SDK_INT >= 24) {
-            releasePlayer()
-        }
+        releasePlayer()
     }
 
     fun onDestroy() {
@@ -245,11 +235,16 @@ class SimpleVideoPlayerLayout @JvmOverloads constructor(
     }
 
 
+    private fun pausePlayer() {
+        player?.pause()
+    }
+
     private fun releasePlayer() {
         player?.let {
             playbackStateListener?.run {
                 it.removeListener(this)
             }
+            it.stop()
             it.release()
             player = null
         }
@@ -258,11 +253,12 @@ class SimpleVideoPlayerLayout @JvmOverloads constructor(
     override fun onClick(v: View) {
         when (v.id) {
             R.id.exo_speed -> {
-                showSpeedChooseDialog()
+                simpleVideoListener?.speedClick()
             }
             R.id.exo_fullscreen -> {
                 check2ChangeScreenState()
             }
+//            R.id.exo_player_back,
             R.id.exo_iv_back -> {
                 simpleVideoListener?.onBack()
             }
@@ -278,19 +274,18 @@ class SimpleVideoPlayerLayout @JvmOverloads constructor(
         }
     }
 
-    //just a demo, handle your own dialog and ui for real project
-    private fun showSpeedChooseDialog() {
-        val speeds = arrayOf("0.75", "1.0", "1.25", "1.5", "2.0")
-        AlertDialog.Builder(context)
-            .setTitle("Please choose speed!")
-            .setItems(speeds) { _, which ->
-                val s = speeds[which].toFloat()
-                changeSpeed(s)
+
+    fun setVideoTitle(title: String?) {
+        if (!TextUtils.isEmpty(title)) {
+            findViewById<TextView>(R.id.exo_tv_title).apply {
+                text = title
+                visibility = VISIBLE
             }
-            .show()
+        }
     }
 
-    private fun changeSpeed(s: Float) {
+
+    fun changeSpeed(s: Float) {
         if (player == null || s == player!!.playbackParameters.speed) {
             return
         }
@@ -331,7 +326,10 @@ class SimpleVideoPlayerLayout @JvmOverloads constructor(
         mmParent?.addView(this, mmIndex, lp)
         (context as Activity).requestedOrientation =
             ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
-        onScreenSmallPortrait()
+
+        screenState = SCREEN_SMALL_PORTRAIT
+//        btnFullScreen?.setImageResource(R.drawable.exo_ic_enlarge)
+        simpleVideoListener?.screenChange(screenState)
     }
 
     private fun change2FullScreenLand() {
@@ -360,16 +358,12 @@ class SimpleVideoPlayerLayout @JvmOverloads constructor(
         )
         (context as Activity).requestedOrientation =
             ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
-        onFullScreenLand()
-    }
 
-    open fun onScreenSmallPortrait() {
-        screenState = SCREEN_SMALL_PORTRAIT
-    }
-
-    open fun onFullScreenLand() {
         screenState = SCREEN_FULL_LAND
+//        btnFullScreen?.setImageResource(R.drawable.exo_ic_shrink)
+        simpleVideoListener?.screenChange(screenState)
     }
+
 
     fun replay() {
         player?.seekTo(0L)
@@ -388,22 +382,30 @@ class SimpleVideoPlayerLayout @JvmOverloads constructor(
 
 
     private fun showEndUi() {
-        playerView.overlayFrameLayout?.setBackgroundColor(Color.parseColor("#777777"))
-        if (hasNext) {
-            tvNext?.visibility = VISIBLE
+        tvNext?.let {
+            if (hasNext) {
+                it.visibility = VISIBLE
+            } else {
+                it.visibility = INVISIBLE
+            }
         }
-        if (hasPre) {
-            tvPre?.visibility = VISIBLE
+
+        tvPre?.let {
+            if (hasPre) {
+                it.visibility = VISIBLE
+            } else {
+                it.visibility = INVISIBLE
+            }
         }
-        tvReplay?.visibility = VISIBLE
+
+        endLayout?.visibility = VISIBLE
     }
 
     private fun hideEndUi() {
-        if (tvReplay?.visibility == INVISIBLE) return
-        playerView.overlayFrameLayout?.background = null
-        tvNext?.visibility = INVISIBLE
-        tvPre?.visibility = INVISIBLE
-        tvReplay?.visibility = INVISIBLE
+        endLayout?.let {
+            if (it.visibility == GONE) return
+            it.visibility = GONE
+        }
     }
 
 
@@ -423,6 +425,7 @@ class SimpleVideoPlayerLayout @JvmOverloads constructor(
                     stateString = "ExoPlayer.STATE_READY     -"
                 }
                 ExoPlayer.STATE_ENDED -> {
+                    simpleVideoListener?.onVideoEnd()
                     showEndUi()
                     stateString = "ExoPlayer.STATE_ENDED     -"
                 }
@@ -432,15 +435,11 @@ class SimpleVideoPlayerLayout @JvmOverloads constructor(
             Log.d(TAG, "change state to $stateString")
         }
 
-        override fun onIsPlayingChanged(isPlaying: Boolean) {
-            if (isPlaying) {
-            }
-            Log.d(TAG, "onIsPlayingChanged:isPlaying= $isPlaying")
-        }
-
 
         override fun onPlayerError(error: ExoPlaybackException) {
             Log.e(TAG, "onPlayerError:error= ${error.message}")
+            Toast.makeText(context, "播放视频出错，请退出页面后重试！", Toast.LENGTH_LONG).show()
+            error.printStackTrace()
         }
 
     }
@@ -449,6 +448,9 @@ class SimpleVideoPlayerLayout @JvmOverloads constructor(
         fun onBack()
         fun onPre()
         fun onNext()
+        fun onVideoEnd()
+        fun speedClick()
+        fun screenChange(screenState: Int)
     }
 
     fun setOnSimpleVideoListener(listener: OnSimpleVideoListener) {
