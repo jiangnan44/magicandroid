@@ -1,3 +1,7 @@
+include ':router:vrouter-complier'
+include ':router:vrouter-annotion'
+include ':router:vrouter'
+include ':annotation'
 include ':junit'
 include ':commonlib'
 include ':exo'
