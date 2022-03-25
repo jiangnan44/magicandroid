@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.util.AttributeSet
+import android.util.Log
 import android.util.TypedValue
 import android.view.MotionEvent
 import android.view.View
@@ -75,8 +76,8 @@ class SimpleRatingBar : View {
         val widthMode = MeasureSpec.getMode(widthMeasureSpec)
         val widthSize = MeasureSpec.getSize(widthMeasureSpec)
         val width = if (MeasureSpec.EXACTLY == widthMode) {
-            widthSize//match_parent
-        } else {//warp_count or accurate dp
+            widthSize//match_parent or accurate dp
+        } else {//warp_count
             val minWidth = (paddingLeft + paddingRight +
                     (starSize + starPadding) * totalStarCount - starPadding).toInt()
             minWidth.coerceAtMost(widthSize)
