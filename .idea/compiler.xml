@@ -8,6 +8,8 @@
       <module name="MagicAndroid.exo" target="11" />
       <module name="MagicAndroid.hotfix" target="11" />
       <module name="MagicAndroid.junit" target="11" />
+      <module name="MagicAndroid.pluginapp" target="11" />
+      <module name="MagicAndroid.pluginframework" target="11" />
       <module name="MagicAndroid.router.vrouter" target="11" />
       <module name="MagicAndroid.views" target="11" />
     </bytecodeTargetLevel>

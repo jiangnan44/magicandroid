@@ -35,7 +35,7 @@ object Router {
             val annotation = clazz.getAnnotation(VRouter::class.java)
             if (annotation != null) {
                 routerMap[annotation.path] = an
-                Log.w("router", "${activity.name} is Anotationed")
+                Log.w("router", "${activity.name} is Annotated")
             }
         }
     }

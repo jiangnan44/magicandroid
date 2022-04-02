@@ -5,6 +5,9 @@
       <map>
         <entry key="..\:/asDemos/magicandroid/app/src/main/res/layout/activity_main.xml" value="0.2046875" />
         <entry key="..\:/asDemos/magicandroid/hotfix/src/main/res/layout/activity_main.xml" value="0.15416666666666667" />
+        <entry key="..\:/asDemos/magicandroid/pluginapp/src/main/res/layout/activity_main2.xml" value="0.19427083333333334" />
+        <entry key="..\:/asDemos/magicandroid/pluginframework/src/main/res/layout/activity_main.xml" value="0.19427083333333334" />
+        <entry key="..\:/asDemos/magicandroid/pluginframework/src/main/res/layout/activity_main2.xml" value="0.20885416666666667" />
         <entry key="..\:/asDemos/magicandroid/views/src/main/res/layout/activity_main.xml" value="0.17291666666666666" />
       </map>
     </option>
@@ -14,5 +17,12 @@
   </component>
   <component name="ProjectType">
     <option name="id" value="Android" />
+  </component>
+  <component name="VisualizationToolProject">
+    <option name="state">
+      <ProjectState>
+        <option name="scale" value="0.2046875" />
+      </ProjectState>
+    </option>
   </component>
 </project>
